@@ -1,0 +1,61 @@
+# OS / editor files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Environment / secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.venv/
+venv/
+env/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+.coverage.*
+htmlcov/
+
+# FastAPI / local database
+*.sqlite3
+*.db
+*.db-journal
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+build/
+dist/
+.npm/
+.pnpm-store/
+coverage/
+*.tsbuildinfo
+
+# Logs
+*.log
+logs/
+
+# Docker local state
+*.local
+
+# Project-local generated content
+video_frames/
+*.mp4
+*.mov
+*.avi
+
+# Keep example env file tracked
+!.env.example
