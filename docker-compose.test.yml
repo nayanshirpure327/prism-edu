@@ -1,0 +1,68 @@
+version: "3.9"
+
+# ============================================================
+# PRISM-EDU — Test Environment Docker Compose
+# ============================================================
+# Usage:
+#   docker-compose -f docker-compose.test.yml up --abort-on-container-exit
+# ============================================================
+
+networks:
+  prism-test-network:
+    driver: bridge
+
+services:
+  postgres-test:
+    image: pgvector/pgvector:pg16
+    container_name: prism-postgres-test
+    environment:
+      POSTGRES_DB: prism_edu_test
+      POSTGRES_USER: prism_test_user
+      POSTGRES_PASSWORD: prism_test_password
+    ports:
+      - "5433:5432"
+    networks:
+      - prism-test-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prism_test_user -d prism_edu_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    tmpfs:
+      - /var/lib/postgresql/data    # In-memory for speed in CI
+
+  redis-test:
+    image: redis:7-alpine
+    container_name: prism-redis-test
+    ports:
+      - "6380:6379"
+    networks:
+      - prism-test-network
+    tmpfs:
+      - /data
+
+  test-runner:
+    build:
+      context: ./apps/api
+      dockerfile: Dockerfile
+      target: test
+    container_name: prism-test-runner
+    environment:
+      DATABASE_URL: postgresql+asyncpg://prism_test_user:prism_test_password@postgres-test:5432/prism_edu_test
+      REDIS_URL: redis://redis-test:6379/0
+      APP_ENV: test
+      LOG_LEVEL: WARNING
+    networks:
+      - prism-test-network
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      redis-test:
+        condition: service_started
+    command: >
+      sh -c "
+        alembic upgrade head &&
+        pytest tests/ -v --tb=short --cov=app --cov-report=term-missing --cov-report=xml:/test-results/coverage.xml
+      "
+    volumes:
+      - ./test-results:/test-results
