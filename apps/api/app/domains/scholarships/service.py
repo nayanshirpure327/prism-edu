@@ -1,0 +1,2 @@
+class ScholarshipService:
+    pass
